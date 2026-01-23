@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Manual Técnico - BBU5900</title>
+    <style>
+        /* Estilos Gerais para Leitura */
+        body {
+            font-family: 'Segoe UI', Calibri, Helvetica, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px;
+            background-color: #f9f9f9;
+        }
+        
+        /* Estilo tipo "Papel" */
+        .page-container {
+            background: #fff;
+            padding: 50px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            border-radius: 4px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-top: 30px;
+            font-size: 22px;
+        }
+
+        h1:first-of-type {
+            margin-top: 0;
+            text-align: center;
+            border-bottom: none;
+            font-size: 28px;
+            color: #e67e22;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        ul, ol {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        /* Estilo da Tabela */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        td:first-child {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            text-align: center;
+            width: 15%;
+        }
+        tr:nth-child(even) {
+            background-color: #fbfbfb;
+        }
+
+        /* Destaques */
+        .highlight {
+            background-color: #fff3cd;
+            padding: 5px 10px;
+            border-radius: 3px;
+            border-left: 4px solid #f1c40f;
+            margin: 10px 0;
+        }
+        
+        /* Botão de Impressão */
+        .print-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+        .print-btn:hover { background: #2980b9; }
+
+        @media print {
+            body { background: #fff; padding: 0; }
+            .page-container { box-shadow: none; padding: 0; }
+            .print-btn { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <button class="print-btn" onclick="window.print()">IMPRIMIR / SALVAR PDF</button>
+
+    <div class="page-container">
+        <h1>Arquitetura e Operação do Sistema BBU5900</h1>
+        
+        <p><strong>Autor:</strong> THALIANDERSON PATRICIO SOUZA ARAUJO</p>
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+
+        <h1>Tecnologia</h1>
+        <p>A BBU5900 é uma Unidade de Banda Base (BBU) modular de alta capacidade, projetada para servir como o centro de processamento em estações base de telecomunicações modernas. Ela oferece suporte abrangente a uma ampla gama de tecnologias de acesso de rádio, incluindo 2G (GSM), 3G (UMTS), 4G (LTE FDD/TDD), NB-IoT e 5G NR, tornando-se uma solução versátil para redes multi-padrão. A arquitetura do sistema é construída em torno de vários componentes-chave:</p>
+        
+        <ul>
+            <li><strong>UMPT</strong> (Unidade Universal de Processamento e Transmissão Principal): atua como o "cérebro" de controle obrigatório, gerenciando todas as operações e a conectividade de backhaul.</li>
+            <li><strong>UBBP</strong> (Unidade Universal de Processamento de Banda Base): lida com o processamento intensivo do sinal de banda base.</li>
+            <li><strong>UPEU</strong> (Unidade de Interface de Energia e Ambiente do Usuário): para conversão e fornecimento de energia.</li>
+            <li><strong>FAN</strong>: para gerenciamento térmico essencial.</li>
+        </ul>
+
+        <p>O desempenho do sistema depende fortemente do tipo específico de placa UBBP instalada, com diferentes modelos, como a série UBBPg, oferecendo capacidades variadas para aplicações como massivo MIMO e configurações complexas de múltiplas portadoras. A implantação e operação bem-sucedidas da BBU5900, conforme descrito nos protocolos técnicos, dependem de uma instalação física meticulosa, fornecimento de energia estável e conectividade crítica do sistema. Notavelmente, uma conexão contínua com um sinal GPS para sincronização precisa de tempo é um requisito indispensável para a validação do sistema.</p>
+
+        <h1>Visão geral e principais recursos</h1>
+        <p>A BBU5900 é a unidade central para processamento de sinal digital e gerenciamento de recursos em uma estação base. Suas principais funções e atributos são projetados para desempenho e adaptabilidade em ambientes de alto tráfego.</p>
+
+        <h3>Funções principais</h3>
+        <ul>
+            <li><strong>Processamento Digital de Sinais:</strong> Converte sinais entre a rede principal e as unidades de rádio remotas (RRUs), gerenciando todo o tráfego de voz, dados e controle.</li>
+            <li><strong>Gerenciamento de Recursos de Rádio:</strong> Controla ativamente a alocação de frequências, gerencia a potência de transmissão e coordena as operações entre diferentes células para otimizar o desempenho da rede.</li>
+        </ul>
+
+        <h3>Atributos principais</h3>
+        <ul>
+            <li><strong>Alta capacidade de transmissão:</strong> Projetado para lidar com cargas de tráfego intensas em várias faixas de frequência simultaneamente.</li>
+            <li><strong>Compatibilidade tecnológica:</strong> Suporta 2G (GSM), 3G (UMTS), 4G (LTE FDD/TDD), NB-IoT e 5G NR.</li>
+            <li><strong>Modularidade e escalabilidade:</strong> O design permite uma expansão simples com placas de processamento adicionais à medida que a demanda da rede aumenta.</li>
+        </ul>
+
+        <h1>Distribuição de slots do chassi</h1>
+        <p>O chassi BBU5900 aloca slots específicos para seus principais tipos de componentes, garantindo o funcionamento e a organização adequados.</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Slot</th>
+                    <th>Tipo de Componente</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>6 - 7</td>
+                    <td><strong>UMPT</strong> (Processamento Principal e Transmissão) - Controle</td>
+                </tr>
+                <tr>
+                    <td>0 - 5</td>
+                    <td><strong>UBBP</strong> (Processamento de Banda Base)</td>
+                </tr>
+                <tr>
+                    <td>18 - 19</td>
+                    <td><strong>UPEU</strong> (Interface de Energia e Meio Ambiente)</td>
+                </tr>
+                <tr>
+                    <td>16</td>
+                    <td><strong>FAN</strong> (Módulo de Ventilação)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h1>Componentes principais do sistema</h1>
+        
+        <h3>UMPT (Unidade Universal Principal de Processamento e Transmissão)</h3>
+        <p>A UMPT é o órgão central de controle e gestão, atuando como o "cérebro" de toda a BBU. Sua presença é obrigatória.</p>
+        <ul>
+            <li>Gerencia toda a estação base (configuração, status, alarmes).</li>
+            <li>Processa todos os sinais e gerencia recursos de rádio.</li>
+            <li>Fornece o link de transmissão de retorno (Backhaul).</li>
+            <li>Fornece o relógio de referência via GPS.</li>
+        </ul>
+        <div class="highlight">
+            <strong>Sincronização GPS:</strong> A conexão com uma fonte GPS é essencial. Falha na conexão resulta em alarme crítico e impede a implantação final.
+        </div>
+
+        <h3>UBBP (Unidade Universal de Processamento de Banda Base)</h3>
+        <p>As placas UBBP são dedicadas ao processamento intensivo de sinais de rádio.</p>
+        <p><strong>Configuração das portas (Padrão de Cores):</strong></p>
+        <ul>
+            <li>Portas 0 e 3: <span style="color:red; font-weight:bold;">Setor Vermelho (A)</span></li>
+            <li>Portas 1 e 4: <span style="color:green; font-weight:bold;">Setor Verde (B)</span></li>
+            <li>Portas 2 e 5: <span style="color:blue; font-weight:bold;">Setor Azul (C)</span></li>
+        </ul>
+        <p><strong>SFP:</strong> Sem o SFP instalado, uma porta é uma "gaiola" vazia e não funcional.</p>
+
+        <h3>UPEU (Energia)</h3>
+        <p>Converte corrente alternada ou contínua para -48V DC. Possui redundância (1+1) nos slots 18 e 19.</p>
+
+        <h3>FAN (Ventilação)</h3>
+        <p>Dissipa o calor gerado pelas placas de alto desempenho. Impede o superaquecimento que poderia acionar desligamentos de segurança.</p>
+
+        <h1>Análise das placas da série UBBPg</h1>
+        
+        <h3>UBBPg2c</h3>
+        <ul>
+            <li><strong>Aplicação:</strong> Rádios padrão (não Massive MIMO).</li>
+            <li><strong>Diferencial:</strong> Suporta combinações mistas em modo TN (TDD).</li>
+            <li>Configurações Comuns: 1x8TR, 2x8TR, 3x8TR, 4TR+4TR.</li>
+        </ul>
+
+        <h3>UBBPg2a</h3>
+        <ul>
+            <li><strong>Aplicação:</strong> Suporta Massive MIMO (64TR) em NR ou LTE.</li>
+            <li><strong>Limitação:</strong> Não suporta combinações mistas no modo TN.</li>
+            <li>Configurações Comuns: 1x64TR, 2x64TR, 3x64TR.</li>
+        </ul>
+
+        <h3>UBBPg3b</h3>
+        <ul>
+            <li><strong>Aplicação:</strong> Alta capacidade para grandes cidades. Suporta Massive MIMO em todos os modos.</li>
+            <li><strong>Diferencial:</strong> Não suporta combinações de modo misto em TN.</li>
+            <li>Configuração Comum: 1x64TR, 2x64TR.</li>
+        </ul>
+
+        <h3>UBBPg3a</h3>
+        <ul>
+            <li><strong>Aplicação:</strong> Topo de linha. A mais flexível.</li>
+            <li>Suporta combinações mistas em NR, LTE e TN simultaneamente.</li>
+            <li>Suporta configurações LTE autônomo e NR.</li>
+        </ul>
+
+        <h1>Checklist para Implantação (Deploy)</h1>
+        <ol>
+            <li>
+                <strong>Integridade Física</strong>
+                <ul>
+                    <li>Sem slots abertos (Use Dummies/Tampas).</li>
+                    <li>Sem alarmes ativos (LEDs vermelhos ou sobreaquecimento).</li>
+                </ul>
+            </li>
+            <li>
+                <strong>Conectividade e Energia</strong>
+                <ul>
+                    <li>Alimentação: Cabo UPEU conectado e disjuntor DCDU ligado.</li>
+                    <li>Transmissão: GPS conectado e sincronizado.</li>
+                    <li>Rádio: Cabos de fibra conectados e configurados com Setor correto.</li>
+                </ul>
+            </li>
+            <li>
+                <strong>Implantação Final</strong>
+                <ul>
+                    <li>Ao clicar em "Implantar", o sistema executa a validação automática (runDeploySequence).</li>
+                    <li><strong>Sucesso:</strong> Animação de ativação do site.</li>
+                    <li><strong>Falha:</strong> Alerta de erro bloqueante.</li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+
+</body>
+</html>
