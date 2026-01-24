@@ -2980,6 +2980,12 @@ async function gerarCertificadoPDF() {
       } else if (dados.highlightClass) {
           var el = document.querySelector('.' + dados.highlightClass);
           if(el) el.classList.add('tutorial-highlight');
+          // Caso especial: se for header-actions, destaca os botões de ação também
+          if(dados.highlightClass === 'header-actions') {
+              var exportBtn = document.querySelector('.export-btn');
+              if(exportBtn) exportBtn.classList.add('tutorial-highlight');
+          }
+          // Caso especial: se for sobre controle UMPT/GPS, destaca ambos
           if(dados.title.includes("Controle")) {
               var gps = document.getElementById('gpsBox');
               if(gps) gps.classList.add('tutorial-highlight');

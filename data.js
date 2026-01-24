@@ -140,19 +140,16 @@ var tutorialData = [
         title: "Modo Curso",
         text: "Clique aqui para abrir o painel de treinamento.<br>Ele contém módulos guiados (Teoria + Prática) para ensinar desde a instalação básica até o troubleshooting.",
         
-        highlightClass: "btn-course",
-        targetId: "btnCourseMode"
+        highlightClass: "header-btn.btn-course"
     },
     {
         title: "Terminal de Comandos",
         text: "Acesse o Console (MML) para verificar alarmes (LST ALM), inventário (DSP BRD) e validar a saúde do site como um técnico real.",
-        targetId: "btnConsole",
-        highlightClass: "btn-console"
+        highlightClass: "header-btn.btn-console"
     },
     {
         title: "Ferramentas de Gestão",
         text: "<ul><li><strong>Relatório:</strong> Baixa PDF/Excel do projeto.</li><li><strong>Limpar:</strong> Reseta toda a simulação.</li><li><strong>Deploy:</strong> Valida e ativa o site (Animação Final).</li></ul>",
-        targetId: "headerActions",
         highlightClass: "header-actions"
     }
 ];
