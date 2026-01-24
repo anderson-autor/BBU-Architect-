@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
   <head>
-    <base target="_top">
+    <meta charset="UTF-8">
     <title>BBU Architect Simulator (Training Edition)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
@@ -9,7 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-    <?!= include('Stylesheet'); ?>
+    <link rel="stylesheet" href="style.css">
   </head>
   <body>
     <div id="startTipOverlay" class="welcome-tip-box">
@@ -77,49 +77,49 @@
     </div>
 
     <div id="setupModalOverlay">
-    <div class="setup-box-modern">
-        <div class="setup-header">
-            <div class="setup-icon-pulse">
-                <span class="material-icons">router</span>
+        <div class="setup-box-modern">
+            <div class="setup-header">
+                <div class="setup-icon-pulse">
+                    <span class="material-icons">router</span>
+                </div>
+                <h2>BBU ARCHITECT <span class="version-tag">SIMULATOR</span></h2>
+                <p>Environment Configuration</p>
             </div>
-            <h2>BBU ARCHITECT <span class="version-tag">SIMULATOR</span></h2>
-            <p>Environment Configuration</p>
-        </div>
 
-        <div class="input-group-modern">
-            <span class="input-icon material-icons">location_on</span>
-            <div class="input-wrapper">
-                <label for="inSiteBBU">Site ID (Local)</label>
-                <input type="text" id="inSiteBBU" placeholder="Ex: SPO001" autocomplete="off">
+            <div class="input-group-modern">
+                <span class="input-icon material-icons">location_on</span>
+                <div class="input-wrapper">
+                    <label for="inSiteBBU">Site ID (Local)</label>
+                    <input type="text" id="inSiteBBU" placeholder="Ex: SPO001" autocomplete="off">
+                </div>
             </div>
-        </div>
 
-        <div class="input-group-modern">
-            <span class="input-icon material-icons">hub</span>
-            <div class="input-wrapper">
-                <label for="inSiteCentral">Remote Hub (Opcional)</label>
-                <input type="text" id="inSiteCentral" placeholder="Deixe vazio para Single Site" autocomplete="off">
+            <div class="input-group-modern">
+                <span class="input-icon material-icons">hub</span>
+                <div class="input-wrapper">
+                    <label for="inSiteCentral">Remote Hub (Opcional)</label>
+                    <input type="text" id="inSiteCentral" placeholder="Deixe vazio para Single Site" autocomplete="off">
+                </div>
             </div>
-        </div>
 
-        <div class="input-group-modern">
-            <span class="input-icon material-icons">bolt</span>
-            <div class="input-wrapper">
-                <label for="inTensao">Voltage Input</label>
-                <input type="text" id="inTensao" value="-48V" readonly style="color: #2ecc71; font-weight:bold; cursor: default;">
+            <div class="input-group-modern">
+                <span class="input-icon material-icons">bolt</span>
+                <div class="input-wrapper">
+                    <label for="inTensao">Voltage Input</label>
+                    <input type="text" id="inTensao" value="-48V" readonly style="color: #2ecc71; font-weight:bold; cursor: default;">
+                </div>
             </div>
-        </div>
 
-        <button class="btn-start-modern" onclick="iniciarSimulacao()">
-            <span>INITIALIZE SYSTEM</span>
-            <span class="material-icons">arrow_forward</span>
-        </button>
-        
-        <div class="setup-footer">
-            <span class="status-indicator"></span> System Ready
+            <button class="btn-start-modern" onclick="iniciarSimulacao()">
+                <span>INITIALIZE SYSTEM</span>
+                <span class="material-icons">arrow_forward</span>
+            </button>
+            
+            <div class="setup-footer">
+                <span class="status-indicator"></span> System Ready
+            </div>
         </div>
     </div>
-</div>
 
     <div id="newSiteModalOverlay" class="custom-modal-overlay">
         <div class="custom-modal-box">
@@ -136,15 +136,13 @@
     <div class="sim-container" id="simContainer">
         
         <div class="sidebar-header" id="mainHeader">
-
-          <div class="branding-container">
-    <i class="material-icons main-app-logo">account_tree</i>
-    
-    <div class="header-title">
-        <div style="font-weight: 600; font-size: 18px; letter-spacing: 1px; color:#f37021;">BBU Architect Simulator</div>
-        <div style="font-size: 10px; opacity: 0.7; letter-spacing: 2px; color:#777;">TRAINING EDITION V2.1</div>
-    </div>
-</div>
+            <div class="branding-container">
+                <i class="material-icons main-app-logo">account_tree</i>
+                <div class="header-title">
+                    <div style="font-weight: 600; font-size: 18px; letter-spacing: 1px; color:#f37021;">BBU Architect Simulator</div>
+                    <div style="font-size: 10px; opacity: 0.7; letter-spacing: 2px; color:#777;">TRAINING EDITION V2.1</div>
+                </div>
+            </div>
             
             <div class="header-actions" id="toolbarActions">
                 <div class="power-stats-container">
@@ -618,7 +616,7 @@
         </div>
     </div>
 
-        <div id="quizRegModal" class="custom-modal-overlay" style="display:none; z-index: 60000;">
+    <div id="quizRegModal" class="custom-modal-overlay" style="display:none; z-index: 60000;">
         <div class="custom-modal-box" style="border-color: #3498db;">
             <h3 style="color:#3498db; margin-bottom:15px;">DADOS DO ALUNO</h3>
             <p style="color:#aaa; font-size:12px; margin-bottom:15px;">Identifique-se para iniciar a avaliação.</p>
@@ -655,9 +653,6 @@
             <div id="quizContainer" style="text-align: left; width: 100%;">
             </div>
             
-            <div id="quizContainer" style="text-align: left; width: 100%;">
-                </div>
-
             <div id="quizFooter" style="margin-top: 30px; text-align: center; border-top: 1px solid #333; padding-top: 20px;">
                 <button class="btn-confirm" onclick="calcularResultadoQuiz()" style="font-size: 16px; padding: 12px 30px;">VER RESULTADO</button>
             </div>
@@ -670,8 +665,8 @@
             </div>
         </div>
     </div>
+    
     <div id="certificateTemplate" style="position:fixed; top:-9999px; left:-9999px; width:1123px; height:794px; background:#fff; z-index:-1; font-family: 'Times New Roman', serif; color:#000;">
-        
         <div style="width:100%; height:100%; padding:30px; box-sizing:border-box; background:#fff;">
             <div style="width:100%; height:100%; border:3px double #1e8449; padding:5px; box-sizing:border-box; position:relative;">
                 <div style="width:100%; height:100%; border:1px solid #d4af37; padding:50px; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; justify-content:space-between; background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(245,250,245,0.3) 100%);">
@@ -721,6 +716,7 @@
             </div>
         </div>
     </div>
+    
     <div id="saveScenarioModal" class="custom-modal-overlay" style="display:none; z-index: 60000;">
         <div class="custom-modal-box" style="border-color: #2ecc71; width: 400px;"> <h3 style="color:#2ecc71; margin-bottom:15px;">SALVAR CONFIGURAÇÃO</h3>
             
@@ -760,24 +756,27 @@
             </div>
         </div>
     </div>
+    
     <div id="mindMapModal" class="custom-modal-overlay" style="display:none; z-index: 55000; align-items: center; justify-content: center;">
-    <div class="theory-box" style="background:#0a0a0a; width:95%; height:90%; border:1px solid #00ffff; display:flex; flex-direction:column; box-shadow:0 0 50px rgba(0,255,255,0.15);">
-        
-        <div class="theory-header" style="background:linear-gradient(90deg, #001f1f, #000); padding:15px; border-bottom:1px solid #00ffff; display:flex; justify-content:space-between; align-items:center;">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <span class="material-icons" style="color:#00ffff; font-size: 24px;">hub</span>
-                <div>
-                    <span style="color:#fff; font-weight:bold; font-size:16px; display:block; letter-spacing:1px;">ARQUITETURA DE SISTEMA BBU 5900</span>
-                    <span style="color:#00ffff; font-size:10px; opacity:0.7;">DIAGRAMA TÉCNICO INTERATIVO</span>
+        <div class="theory-box" style="background:#0a0a0a; width:95%; height:90%; border:1px solid #00ffff; display:flex; flex-direction:column; box-shadow:0 0 50px rgba(0,255,255,0.15);">
+            
+            <div class="theory-header" style="background:linear-gradient(90deg, #001f1f, #000); padding:15px; border-bottom:1px solid #00ffff; display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span class="material-icons" style="color:#00ffff; font-size: 24px;">hub</span>
+                    <div>
+                        <span style="color:#fff; font-weight:bold; font-size:16px; display:block; letter-spacing:1px;">ARQUITETURA DE SISTEMA BBU 5900</span>
+                        <span style="color:#00ffff; font-size:10px; opacity:0.7;">DIAGRAMA TÉCNICO INTERATIVO</span>
+                    </div>
                 </div>
+                <button class="btn-mini-close" onclick="toggleMindMap()" style="color:#fff; font-size:24px; cursor:pointer;">✕</button>
             </div>
-            <button class="btn-mini-close" onclick="toggleMindMap()" style="color:#fff; font-size:24px; cursor:pointer;">✕</button>
+
+            <div id="mindMapContainer" style="flex:1; overflow:auto; padding:40px; background:#050505; position:relative;">
+            </div>
         </div>
-
-        <div id="mindMapContainer" style="flex:1; overflow:auto; padding:40px; background:#050505; position:relative;">
-            </div>
     </div>
-</div>
 
-    <?!= include('Data'); ?>      <?!= include('JavaScript'); ?> </body>
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+  </body>
 </html>
