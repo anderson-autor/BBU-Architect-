@@ -345,8 +345,7 @@ class CableManager {
                     };
                     hitPath.onmousedown = (e) => {
                         e.preventDefault(); e.stopPropagation();
-                        // Função global definida mais à frente
-                        if(typeof abrirConfigCabo === 'function') abrirConfigCabo(c.id, e.clientX, e.clientY);
+                        abrirConfigCabo(c.id, e.clientX, e.clientY);
                     };
                     this.svgLayer.appendChild(hitPath);
                 } else {
@@ -422,7 +421,7 @@ class CableManager {
             if (e.ctrlKey) {
                 this.splitSegment(cable.id, index, e.clientX, e.clientY);
             } else {
-                if(typeof abrirConfigCabo === 'function') abrirConfigCabo(cable.id, e.clientX, e.clientY);
+                abrirConfigCabo(cable.id, e.clientX, e.clientY);
             }
         };
 
