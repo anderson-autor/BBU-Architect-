@@ -1984,59 +1984,83 @@ function drawPolyLines() {
 
 // --- 8. CONFIGURAÇÃO DE CABOS & CAPACIDADE ---
 
-function abrirConfigCabo(id, mouseX, mouseY) { 
-    cableManager.activeCableId = id;
-    var cable = cableManager.cables.find(c => c.id === id); 
-    
-    if (!cable) { console.error("Erro: Cabo não encontrado para o ID", id); return; }
+function abrirConfigCabo(id, mouseX, mouseY) {
+    try {
+        // 1. VALIDAÇÕES BÁSICAS
+        if (!id) {
+            console.error("Erro: ID do cabo não fornecido");
+            showNotification("Erro: Cabo inválido", "error");
+            return false;
+        }
 
-    document.getElementById('infoSourceType').innerText = "TIPO: " + cable.sourceType;
-    var oduOpts = document.getElementById('configODUOptions');
-    
-    if (cable.sourceType === 'LOCAL' || cable.sourceType === 'REMOTE') {
-        oduOpts.style.display = 'block';
-        document.getElementById('cfgSetor').value = cable.config.sector || ""; 
-        document.getElementById('cfgRadio').value = cable.config.radio || "64TR Huawei";
-        document.getElementById('cfgLteCount').value = (cable.config.lteCount !== undefined) ? cable.config.lteCount : "1";
-        document.getElementById('cfgNrBw').value = (cable.config.nrBw !== undefined) ? cable.config.nrBw : "50";
-    } else { 
-        oduOpts.style.display = 'none';
-    }
-    
-    var btnSalvar = document.getElementById('btnSalvarCabo'); 
-    var btnDeletar = document.getElementById('btnDeletarCabo');
-    if (btnSalvar && btnDeletar) {
+        // 2. BUSCAR CABO NO MANAGER
+        var cable = cableManager.cables.find(c => c.id === id);
+        if (!cable) {
+            console.error("Erro: Cabo não encontrado para o ID " + id);
+            showNotification("Erro: Cabo não encontrado", "error");
+            return false;
+        }
+
+        // 3. SALVAR REFERÊNCIA ATIVA
+        cableManager.activeCableId = id;
+        console.log("Abrindo config de cabo: " + cable.sourceType + " (ID: " + id + ")");
+
+        // 4. OBTER ELEMENTOS DO MODAL
+        var modal = document.getElementById('cableConfigModal');
+        var infoEl = document.getElementById('infoSourceType');
+        var oduOpts = document.getElementById('configODUOptions');
+        var btnSalvar = document.getElementById('btnSalvarCabo');
+        var btnDeletar = document.getElementById('btnDeletarCabo');
+
+        if (!modal || !infoEl || !oduOpts || !btnSalvar || !btnDeletar) {
+            console.error("Erro: Elementos do modal não encontrados");
+            showNotification("Erro: Interface indisponível", "error");
+            return false;
+        }
+
+        // 5. ATUALIZAR TIPO DE CABO
+        infoEl.innerText = "TIPO: " + cable.sourceType;
+
+        // 6. CONFIGURAR OPÇÕES CONFORME TIPO
+        if (cable.sourceType === 'LOCAL' || cable.sourceType === 'REMOTE') {
+            oduOpts.style.display = 'block';
+            document.getElementById('cfgSetor').value = cable.config.sector || "";
+            document.getElementById('cfgRadio').value = cable.config.radio || "64TR Huawei";
+            document.getElementById('cfgLteCount').value = (cable.config.lteCount !== undefined) ? cable.config.lteCount : "1";
+            document.getElementById('cfgNrBw').value = (cable.config.nrBw !== undefined) ? cable.config.nrBw : "50";
+        } else {
+            oduOpts.style.display = 'none';
+        }
+
+        // 7. CONFIGURAR BOTÕES CONFORME TIPO
         if (cable.sourceType === 'JUMPER' || cable.sourceType === 'GPS' || cable.sourceType === 'ENERGY') {
             btnSalvar.style.display = 'none';
-            btnDeletar.style.width = '100%'; 
-            btnDeletar.classList.remove('btn-icon-only'); 
+            btnDeletar.style.width = '100%';
+            btnDeletar.classList.remove('btn-icon-only');
             btnDeletar.innerHTML = '<span class="material-icons" style="font-size:14px; margin-right:6px;">delete</span> EXCLUIR CABO';
-        } else { 
+        } else {
             btnSalvar.style.display = 'flex';
-            btnDeletar.style.width = '45px'; 
-            btnDeletar.classList.add('btn-icon-only'); 
-            btnDeletar.innerHTML = '<span class="material-icons">delete</span>'; 
+            btnDeletar.style.width = '45px';
+            btnDeletar.classList.add('btn-icon-only');
+            btnDeletar.innerHTML = '<span class="material-icons">delete</span>';
         }
+
+        // 8. POSICIONAR MODAL NO CENTRO DA TELA (FIXO)
+        modal.style.position = 'fixed';
+        modal.style.top = '50%';
+        modal.style.left = '50%';
+        modal.style.transform = 'translate(-50%, -50%)';
+        modal.style.zIndex = '10000';
+        modal.style.display = 'block';
+
+        console.log("Modal de configuração de cabo aberto com sucesso");
+        return true;
+
+    } catch (error) {
+        console.error("Erro ao abrir configuração de cabo:", error);
+        showNotification("Erro inesperado ao configurar cabo", "error");
+        return false;
     }
-    
-    var modal = document.getElementById('cableConfigModal');
-    modal.style.display = 'block';
-    
-    var containerRect = document.getElementById('simContainer').getBoundingClientRect();
-    var modalRect = modal.getBoundingClientRect(); 
-    
-    var relativeX = mouseX - containerRect.left;
-    var relativeY = mouseY - containerRect.top;
-
-    var posX = relativeX + 20; 
-    var posY = relativeY;
-
-    if(posX + modalRect.width > containerRect.width) posX = relativeX - modalRect.width - 20;
-    if(posY + modalRect.height > containerRect.height) posY = relativeY - modalRect.height; 
-    if(posY < 0) posY = 10;
-    
-    modal.style.left = posX + 'px'; 
-    modal.style.top = posY + 'px';
 }
 
 function aplicarConfigCabo() { 
