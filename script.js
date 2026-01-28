@@ -344,8 +344,15 @@ class CableManager {
                         setTimeout(() => { if(this.hoveredCableId === c.id) { this.hoveredCableId = null; this.render(); } }, 50);
                     };
                     hitPath.onmousedown = (e) => {
-                        e.preventDefault(); e.stopPropagation();
-                        abrirConfigCabo(c.id, e.clientX, e.clientY);
+                        try {
+                            e.preventDefault(); 
+                            e.stopPropagation();
+                            console.log("Clique em cabo detectado: " + c.id);
+                            abrirConfigCabo(c.id);
+                        } catch (err) {
+                            console.error("Erro ao abrir config de cabo (path):", err);
+                            showNotification("Erro ao configurar cabo", "error");
+                        }
                     };
                     this.svgLayer.appendChild(hitPath);
                 } else {
@@ -417,11 +424,19 @@ class CableManager {
         };
 
         hitLine.onmousedown = (e) => {
-            e.preventDefault(); e.stopPropagation();
-            if (e.ctrlKey) {
-                this.splitSegment(cable.id, index, e.clientX, e.clientY);
-            } else {
-                abrirConfigCabo(cable.id, e.clientX, e.clientY);
+            try {
+                e.preventDefault(); 
+                e.stopPropagation();
+                if (e.ctrlKey) {
+                    console.log("Ctrl+Clique: adicionando vértice");
+                    this.splitSegment(cable.id, index, e.clientX, e.clientY);
+                } else {
+                    console.log("Clique em cabo detectado: " + cable.id);
+                    abrirConfigCabo(cable.id);
+                }
+            } catch (err) {
+                console.error("Erro ao processar clique em cabo (segment):", err);
+                showNotification("Erro ao configurar cabo", "error");
             }
         };
 
@@ -1984,7 +1999,7 @@ function drawPolyLines() {
 
 // --- 8. CONFIGURAÇÃO DE CABOS & CAPACIDADE ---
 
-function abrirConfigCabo(id, mouseX, mouseY) {
+function abrirConfigCabo(id) {
     try {
         // 1. VALIDAÇÕES BÁSICAS
         if (!id) {
@@ -2003,7 +2018,7 @@ function abrirConfigCabo(id, mouseX, mouseY) {
 
         // 3. SALVAR REFERÊNCIA ATIVA
         cableManager.activeCableId = id;
-        console.log("Abrindo config de cabo: " + cable.sourceType + " (ID: " + id + ")");
+        console.log("✓ Abrindo config de cabo: " + cable.sourceType + " (ID: " + id + ")");
 
         // 4. OBTER ELEMENTOS DO MODAL
         var modal = document.getElementById('cableConfigModal');
@@ -2012,9 +2027,20 @@ function abrirConfigCabo(id, mouseX, mouseY) {
         var btnSalvar = document.getElementById('btnSalvarCabo');
         var btnDeletar = document.getElementById('btnDeletarCabo');
 
-        if (!modal || !infoEl || !oduOpts || !btnSalvar || !btnDeletar) {
-            console.error("Erro: Elementos do modal não encontrados");
-            showNotification("Erro: Interface indisponível", "error");
+        if (!modal) {
+            console.error("Erro: cableConfigModal não encontrado no DOM");
+            showNotification("Erro: Modal indisponível", "error");
+            return false;
+        }
+        
+        if (!infoEl || !oduOpts || !btnSalvar || !btnDeletar) {
+            console.error("Erro: Elementos do modal incompletos", {
+                infoEl: !!infoEl,
+                oduOpts: !!oduOpts,
+                btnSalvar: !!btnSalvar,
+                btnDeletar: !!btnDeletar
+            });
+            showNotification("Erro: Interface do modal incompleta", "error");
             return false;
         }
 
@@ -2045,7 +2071,7 @@ function abrirConfigCabo(id, mouseX, mouseY) {
             btnDeletar.innerHTML = '<span class="material-icons">delete</span>';
         }
 
-        // 8. POSICIONAR MODAL NO CENTRO DA TELA (FIXO)
+        // 8. POSICIONAR MODAL NO CENTRO DA TELA (FIXO) - SEM DEPENDÊNCIA DE MOUSE
         modal.style.position = 'fixed';
         modal.style.top = '50%';
         modal.style.left = '50%';
@@ -2053,12 +2079,13 @@ function abrirConfigCabo(id, mouseX, mouseY) {
         modal.style.zIndex = '10000';
         modal.style.display = 'block';
 
-        console.log("Modal de configuração de cabo aberto com sucesso");
+        console.log("✓ Modal de configuração exibido com sucesso");
         return true;
 
     } catch (error) {
-        console.error("Erro ao abrir configuração de cabo:", error);
-        showNotification("Erro inesperado ao configurar cabo", "error");
+        console.error("Erro CRÍTICO ao abrir configuração de cabo:", error);
+        console.error("Stack:", error.stack);
+        showNotification("Erro inesperado ao configurar cabo: " + error.message, "error");
         return false;
     }
 }
