@@ -2597,7 +2597,13 @@ function verificarEstadoSimulador() {
         dcduBox.style.display = 'none';
     }
     
-    if (dcduBox.style.display !== 'none' && isChassisPowered()) {
+    // Se a DCDU estiver visível e houver alimentação (ou DCDU ligada em 18/19), manter brilho verde
+    var hasActiveDcduPower = [18,19].some(function(sid) {
+        var cable = cableManager.cables.find(function(c){ return c.connectedTo === "Slot " + sid + " Port PWR"; });
+        return !!(cable && dcduSwitches[sid] && cable.polarityStatus === 'CORRECT');
+    });
+
+    if (dcduBox.style.display !== 'none' && (isChassisPowered() || hasActiveDcduPower)) {
         chassis.classList.add('bbu-glow-on');
     } else {
         chassis.classList.remove('bbu-glow-on');
