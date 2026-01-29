@@ -733,7 +733,8 @@ class CableManager {
         this.render();
         showNotification("Conectado (Alinhado 90°)", "success");
         try {
-            if (cable && (cable.sourceType === 'LOCAL' || cable.sourceType === 'REMOTE' || cable.sourceType === 'UMPT')) {
+            // Abre painel de config APENAS para cabos RF (LOCAL e REMOTE), não para UMPT, GPS ou DCDU
+            if (cable && (cable.sourceType === 'LOCAL' || cable.sourceType === 'REMOTE')) {
                 abrirPainelConfig(cable.id);
             }
         } catch (e) { console.warn('abrirPainelConfig falhou:', e); }
@@ -2018,6 +2019,12 @@ function abrirConfigCabo(id) {
         if (!cable) {
             console.error("Erro: Cabo não encontrado para o ID " + id);
             showNotification("Erro: Cabo não encontrado", "error");
+            return false;
+        }
+
+        // 2.5. BLOQUEAR ABERTURA DO MODAL PARA CABOS NÃO-RF (UMPT, GPS, DCDU)
+        if (cable.sourceType !== 'LOCAL' && cable.sourceType !== 'REMOTE') {
+            console.log("ℹ Cabo não é RF (tipo: " + cable.sourceType + "). Modal não necessário.");
             return false;
         }
 
@@ -4321,14 +4328,15 @@ function abrirPainelGeral() {
         var panel = document.getElementById('sideConfigPanel');
         var sel = document.getElementById('panelCableSelector');
         sel.innerHTML = '';
-        var cables = cableManager.getAllCables().filter(c => c.sourceType === 'LOCAL' || c.sourceType === 'REMOTE' || c.sourceType === 'UMPT');
+        // Filtrar apenas cabos LOCAL e REMOTE (não UMPT, GPS, DCDU)
+        var cables = cableManager.getAllCables().filter(c => c.sourceType === 'LOCAL' || c.sourceType === 'REMOTE');
         if(cables.length === 0) {
             sel.innerHTML = '<option value="">-- Nenhum --</option>';
             var infoEl = document.getElementById('panelInfoSourceType'); if(infoEl) infoEl.innerText = 'TIPO: ...';
         } else {
             cables.forEach(function(c, idx) {
                 var opt = document.createElement('option'); opt.value = c.id;
-                opt.text = '[' + c.id.replace('cabo_','') + '] ' + (c.siteOrigin || c.sourceType) + ' -> ' + (c.connectedTo || 'Slot 0 Port 1');
+                opt.text = (c.siteOrigin || c.sourceType) + ' -> ' + (c.connectedTo || 'Slot 0 Port 1');
                 sel.appendChild(opt);
             });
             sel.value = cables[0].id;
@@ -4343,10 +4351,11 @@ function abrirPainelConfig(id) {
         var panel = document.getElementById('sideConfigPanel');
         var sel = document.getElementById('panelCableSelector');
         sel.innerHTML = '';
-        var cables = cableManager.getAllCables().filter(c => c.sourceType === 'LOCAL' || c.sourceType === 'REMOTE' || c.sourceType === 'UMPT');
+        // Filtrar apenas cabos LOCAL e REMOTE (não UMPT, GPS, DCDU)
+        var cables = cableManager.getAllCables().filter(c => c.sourceType === 'LOCAL' || c.sourceType === 'REMOTE');
         cables.forEach(function(c) {
             var opt = document.createElement('option'); opt.value = c.id;
-            opt.text = '[' + c.id.replace('cabo_','') + '] ' + (c.siteOrigin || c.sourceType) + ' -> ' + (c.connectedTo || 'Slot 0 Port 1');
+            opt.text = (c.siteOrigin || c.sourceType) + ' -> ' + (c.connectedTo || 'Slot 0 Port 1');
             sel.appendChild(opt);
         });
         // seleciona o id pedido
