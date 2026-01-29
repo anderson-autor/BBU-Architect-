@@ -13,7 +13,7 @@ var BOARD_SPECS_TN = {
     "UBBPg3A": { 
         limites: { mimo_lte: 6, mimo_nr: 6, std_lte: 12, std_nr: 6 },
         price: "R$ 48.722,16",
-        desc: "Topo de Linha (Suporta 64TR em todos os modos)"
+        desc: "Topo de Linha (Suporta 64TR em todos os modos) - RESTRIÇÃO: Modo TN não aceita 8TR + 4TR juntos"
     },
     "UBBPg3B": { 
         limites: { mimo_lte: 3, mimo_nr: 3, std_lte: 0, std_nr: 0 },

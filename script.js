@@ -732,6 +732,11 @@ class CableManager {
         
         this.render();
         showNotification("Conectado (Alinhado 90°)", "success");
+        try {
+            if (cable && (cable.sourceType === 'LOCAL' || cable.sourceType === 'REMOTE' || cable.sourceType === 'UMPT')) {
+                abrirPainelConfig(cable.id);
+            }
+        } catch (e) { console.warn('abrirPainelConfig falhou:', e); }
         return true;
     }
 
@@ -2123,8 +2128,145 @@ function deletarCaboAtivo() {
     } 
 }
 
+
+// --- VALIDAÇÃO DE COMPATIBILIDADE DE RADIOS COM PLACAS ---
+function validarCompatibilidadeRadios() {
+    document.querySelectorAll('.bbu-slot').forEach(s => s.classList.remove('slot-incompatible-radio'));
+
+    var parent = {};
+    for(var i=0; i<=19; i++) parent[i] = i;
+
+    function find(i) {
+        if (parent[i] === i) return i;
+        return parent[i] = find(parent[i]);
+    }
+    function union(i, j) {
+        var rootI = find(i);
+        var rootJ = find(j);
+        if (rootI !== rootJ) parent[rootI] = rootJ;
+    }
+
+    // Agrupar slots conectados por Jumpers
+    cableManager.cables.forEach(function(c) {
+        if (c.sourceType === 'JUMPER' && c.connectedToStart && c.connectedTo) {
+            var s1Match = c.connectedToStart.match(/Slot (\d+)/);
+            var s2Match = c.connectedTo.match(/Slot (\d+)/);
+            if (s1Match && s2Match) {
+                union(parseInt(s1Match[1]), parseInt(s2Match[1]));
+            }
+        }
+    });
+
+    var groups = {};
+    for(var i=0; i<=19; i++) {
+        var p = find(i);
+        if (!groups[p]) groups[p] = [];
+        groups[p].push(i);
+    }
+
+    // Validar compatibilidade por grupo
+    Object.values(groups).forEach(function(groupSlots) {
+        var activeSlots = groupSlots.filter(sid => {
+            var el = document.getElementById('bbuSlot'+sid);
+            return el && !el.classList.contains('bbu-slot-empty');
+        });
+
+        if (activeSlots.length === 0) return;
+
+        var activeElements = [];
+        var boardInfo = [];
+        var radioTypesInGroup = { "64TR": 0, "8TR": 0, "4TR": 0 };
+        var radioList = [];
+
+        // Coletar informações de placas
+        activeSlots.forEach(function(slotId) {
+            var slotEl = document.getElementById('bbuSlot' + slotId);
+            activeElements.push(slotEl);
+            var label = slotEl.querySelector('.installed-board-label');
+            var name = label ? label.innerText : "";
+            boardInfo.push({
+                slotId: slotId,
+                fullName: name,
+                model: name.match(/UBBPg(\d+[A-C]?)/)?.[0] || "",
+                mode: name.includes("(TN)") ? "TN" : (name.includes("(LTE)") ? "LTE" : (name.includes("(NR)") ? "NR" : ""))
+            });
+        });
+
+        // Coletar tipos de radios conectados a este grupo
+        cableManager.cables.forEach(function(c) {
+            if (!c.connectedTo || (c.sourceType !== 'LOCAL' && c.sourceType !== 'REMOTE')) return;
+            
+            var match = c.connectedTo.match(/Slot (\d+)/);
+            if (match) {
+                var slotId = parseInt(match[1]);
+                if (activeSlots.includes(slotId)) {
+                    var radioType = c.config.radio || "64TR Huawei";
+                    radioList.push(radioType);
+                    if (radioType.includes("64TR")) radioTypesInGroup["64TR"]++;
+                    else if (radioType.includes("8TR")) radioTypesInGroup["8TR"]++;
+                    else if (radioType.includes("4TR")) radioTypesInGroup["4TR"]++;
+                }
+            }
+        });
+
+        // Se não há radios conectados, não há conflito
+        if (radioList.length === 0) return;
+
+        var issues = [];
+
+        // --- VALIDAÇÃO 1: G3B (Apenas MIMO - 64TR) ---
+        boardInfo.forEach(function(board) {
+            if (board.model.includes("UBBPg3B")) {
+                if (radioTypesInGroup["8TR"] > 0 || radioTypesInGroup["4TR"] > 0) {
+                    issues.push(`G3B aceita apenas 64TR (MIMO). Encontrado: ${radioTypesInGroup["8TR"]}×8TR + ${radioTypesInGroup["4TR"]}×4TR`);
+                }
+            }
+        });
+
+        // --- VALIDAÇÃO 2: G2C (Apenas STD - 8TR, 4TR. SEM 64TR) ---
+        boardInfo.forEach(function(board) {
+            if (board.model.includes("UBBPg2C")) {
+                if (radioTypesInGroup["64TR"] > 0) {
+                    issues.push(`G2C não aceita 64TR (MIMO). Aceita apenas 8TR e 4TR. Encontrado: ${radioTypesInGroup["64TR"]}×64TR`);
+                }
+            }
+        });
+
+        // --- VALIDAÇÃO 3: G2A em TN (Bloqueia MIMO) ---
+        boardInfo.forEach(function(board) {
+            if (board.model.includes("UBBPg2A") && board.mode === "TN") {
+                if (radioTypesInGroup["64TR"] > 0) {
+                    issues.push(`G2A no modo TN não aceita 64TR. Aceita apenas 8TR e 4TR. Encontrado: ${radioTypesInGroup["64TR"]}×64TR`);
+                }
+            }
+        });
+
+        // --- VALIDAÇÃO 4: G3A em TN (Não aceita 8TR + 4TR juntos) ---
+        boardInfo.forEach(function(board) {
+            if (board.model.includes("UBBPg3A") && board.mode === "TN") {
+                if (radioTypesInGroup["8TR"] > 0 && radioTypesInGroup["4TR"] > 0) {
+                    issues.push(`G3A (TN) não aceita 8TR + 4TR juntos. Encontrado: ${radioTypesInGroup["8TR"]}×8TR + ${radioTypesInGroup["4TR"]}×4TR`);
+                }
+            }
+        });
+
+        // Se houver problemas, mostrar e marcar slots
+        if (issues.length > 0) {
+            activeElements.forEach(el => el.classList.add('slot-incompatible-radio'));
+            if (typeof courseState !== 'undefined' && !courseState.active) {
+                var context = (activeElements.length > 1) ? "GRUPO (Jumper)" : activeElements[0].querySelector('.installed-board-label').innerText;
+                showNotification(`INCOMPATIBILIDADE ${context}: ${issues[0]}`, "error");
+            }
+            return;
+        }
+    });
+}
+
 function validarCapacidadeBBU() {
     document.querySelectorAll('.bbu-slot').forEach(s => s.classList.remove('slot-overload'));
+
+    // Validar compatibilidade de radios ANTES de validar capacidade
+    validarCompatibilidadeRadios();
 
     var parent = {};
     for(var i=0; i<=19; i++) parent[i] = i;
@@ -2156,6 +2298,7 @@ function validarCapacidadeBBU() {
         groups[p].push(i);
     }
 
+    // --- NOVA LÓGICA: Soma Global de Portadoras (independente de tipo de rádio) ---
     var slotDemand = {};
     cableManager.cables.forEach(function(c) {
         if (!c.connectedTo || (c.sourceType !== 'LOCAL' && c.sourceType !== 'REMOTE')) return;
@@ -2163,28 +2306,14 @@ function validarCapacidadeBBU() {
         var match = c.connectedTo.match(/Slot (\d+)/);
         if (match) {
             var slotId = parseInt(match[1]);
-            if (!slotDemand[slotId]) slotDemand[slotId] = { mimo_lte: 0, mimo_nr: 0, std_lte: 0, std_nr: 0 };
+            if (!slotDemand[slotId]) slotDemand[slotId] = { total_lte: 0, total_nr: 0 };
             
             var lteCount = parseInt(c.config.lteCount) || 0;
             var nrBw = parseInt(c.config.nrBw) || 0;
-            var radioType = c.config.radio || "64TR Huawei";
             
-            var isMimo = radioType.includes("64TR"); 
-            var usa8TR = radioType.includes("8TR"); 
-            var usa4TR = radioType.includes("4TR"); 
-
-            if (isMimo) {
-                if (lteCount > 0) slotDemand[slotId].mimo_lte += lteCount;
-                if (nrBw > 0)     slotDemand[slotId].mimo_nr += 1;
-            } 
-            else if (usa8TR || usa4TR) {
-                if (lteCount > 0) slotDemand[slotId].std_lte += lteCount;
-                if (nrBw > 0)     slotDemand[slotId].std_nr += 1;
-            }
-            else {
-                if (lteCount > 0) slotDemand[slotId].std_lte += lteCount;
-                if (nrBw > 0)     slotDemand[slotId].std_nr += 1;
-            }
+            // Soma GLOBAL: todas as portadoras LTE e NR, independente de 64TR, 8TR ou 4TR
+            if (lteCount > 0) slotDemand[slotId].total_lte += lteCount;
+            if (nrBw > 0)     slotDemand[slotId].total_nr += 1;
         }
     });
 
@@ -2196,8 +2325,10 @@ function validarCapacidadeBBU() {
 
         if (activeSlots.length === 0) return;
 
-        var groupCap = { mimo_lte: 0, mimo_nr: 0, std_lte: 0, std_nr: 0 };
-        var groupUse = { mimo_lte: 0, mimo_nr: 0, std_lte: 0, std_nr: 0 };
+        var groupCapLTE = 0;  // Capacidade Global LTE
+        var groupCapNR = 0;   // Capacidade Global NR
+        var groupUseLTE = 0;  // Uso Global LTE
+        var groupUseNR = 0;   // Uso Global NR
         var activeElements = [];
 
         activeSlots.forEach(function(slotId) {
@@ -2206,47 +2337,49 @@ function validarCapacidadeBBU() {
             var label = slotEl.querySelector('.installed-board-label');
             var name = label ? label.innerText : "";
 
+            // Soma uso global por slot
             if (slotDemand[slotId]) {
-                groupUse.mimo_lte += slotDemand[slotId].mimo_lte;
-                groupUse.mimo_nr  += slotDemand[slotId].mimo_nr;
-                groupUse.std_lte  += slotDemand[slotId].std_lte;
-                groupUse.std_nr   += slotDemand[slotId].std_nr;
+                groupUseLTE += slotDemand[slotId].total_lte;
+                groupUseNR  += slotDemand[slotId].total_nr;
             }
 
             var isTN = name.includes("(TN)");
             var isNR = name.includes("(NR)");
             var isLTE = name.includes("(LTE)");
             
-            if (name.includes("UBBPg3A")) {
-                if (isTN) { groupCap.mimo_lte += 6; groupCap.mimo_nr += 3; groupCap.std_lte += 6; groupCap.std_nr += 3; }
-                else if (isNR) { groupCap.mimo_nr += 6; groupCap.std_nr += 6; }
-                else if (isLTE) { groupCap.mimo_lte += 6; groupCap.std_lte += 12; }
+            // Extrai modelo da placa (remover modo)
+            var modelMatch = name.match(/UBBPg(\d+[A-C]?)/);
+            var model = modelMatch ? modelMatch[0] : "";
+            
+            if (model.includes("UBBPg3A")) {
+                if (isTN) { groupCapLTE += 6; groupCapNR += 3; }
+                else if (isNR) { groupCapNR += 6; }
+                else if (isLTE) { groupCapLTE += 6; }
             }
-            else if (name.includes("UBBPg3B")) {
-                if (isTN) { groupCap.mimo_lte += 3; groupCap.mimo_nr += 3; }
-                else if (isNR) { groupCap.mimo_nr += 6; groupCap.std_nr += 3; }
-                else if (isLTE) { groupCap.mimo_lte += 6; groupCap.std_lte += 3; }
+            else if (model.includes("UBBPg3B")) {
+                if (isTN) { groupCapLTE += 3; groupCapNR += 3; }
+                else if (isNR) { groupCapNR += 6; }
+                else if (isLTE) { groupCapLTE += 6; }
             }
-            else if (name.includes("UBBPg2A")) {
-                if (isTN) { groupCap.std_lte += 6; groupCap.std_nr += 3; } 
-                else if (isNR) { groupCap.mimo_nr += 6; groupCap.std_nr += 3; } 
-                else if (isLTE) { groupCap.mimo_lte += 6; groupCap.std_lte += 6; }
+            else if (model.includes("UBBPg2A")) {
+                if (isTN) { groupCapLTE += 6; groupCapNR += 3; } 
+                else if (isNR) { groupCapNR += 6; } 
+                else if (isLTE) { groupCapLTE += 6; }
             }
-            else if (name.includes("UBBPg2C")) {
-                if (isTN) { groupCap.std_lte += 6; groupCap.std_nr += 3; }
-                else if (isNR) { groupCap.std_nr += 3; }
-                else if (isLTE) { groupCap.std_lte += 12; }
+            else if (model.includes("UBBPg2C")) {
+                if (isTN) { groupCapLTE += 6; groupCapNR += 3; }
+                else if (isNR) { groupCapNR += 3; }
+                else if (isLTE) { groupCapLTE += 6; }
             }
-            else if (name.includes("UBBPg1a")) {
-                groupCap.std_lte += 3;
+            else if (model.includes("UBBPg1a")) {
+                groupCapLTE += 3;
+                groupCapNR += 0;
             }
         });
 
         var issues = [];
-        if (groupUse.mimo_lte > groupCap.mimo_lte) issues.push(`Falta capacidade MIMO LTE`);
-        if (groupUse.mimo_nr > groupCap.mimo_nr) issues.push(`Falta capacidade MIMO NR`);
-        if (groupUse.std_lte > groupCap.std_lte) issues.push(`Falta capacidade STD LTE`);
-        if (groupUse.std_nr > groupCap.std_nr) issues.push(`Falta capacidade STD NR`);
+        if (groupUseLTE > groupCapLTE) issues.push(`Falta capacidade em LTE: ${groupUseLTE} > ${groupCapLTE}`);
+        if (groupUseNR > groupCapNR) issues.push(`Falta capacidade em NR: ${groupUseNR} > ${groupCapNR}`);
 
         if (issues.length > 0) {
             activeElements.forEach(el => el.classList.add('slot-overload'));
@@ -4181,3 +4314,121 @@ function renderNeonNode(node, parentElement, isRoot = false) {
 
     parentElement.appendChild(wrapper);
 }
+
+// === Painel Lateral de Configuração RF (Off-Canvas) ===
+function abrirPainelGeral() {
+    try {
+        var panel = document.getElementById('sideConfigPanel');
+        var sel = document.getElementById('panelCableSelector');
+        sel.innerHTML = '';
+        var cables = cableManager.getAllCables().filter(c => c.sourceType === 'LOCAL' || c.sourceType === 'REMOTE' || c.sourceType === 'UMPT');
+        if(cables.length === 0) {
+            sel.innerHTML = '<option value="">-- Nenhum --</option>';
+            var infoEl = document.getElementById('panelInfoSourceType'); if(infoEl) infoEl.innerText = 'TIPO: ...';
+        } else {
+            cables.forEach(function(c, idx) {
+                var opt = document.createElement('option'); opt.value = c.id;
+                opt.text = '[' + c.id.replace('cabo_','') + '] ' + (c.siteOrigin || c.sourceType) + ' -> ' + (c.connectedTo || 'Slot 0 Port 1');
+                sel.appendChild(opt);
+            });
+            sel.value = cables[0].id;
+            trocarCaboPainel(sel.value);
+        }
+        panel.classList.add('open');
+    } catch (err) { console.error('abrirPainelGeral:', err); }
+}
+
+function abrirPainelConfig(id) {
+    try {
+        var panel = document.getElementById('sideConfigPanel');
+        var sel = document.getElementById('panelCableSelector');
+        sel.innerHTML = '';
+        var cables = cableManager.getAllCables().filter(c => c.sourceType === 'LOCAL' || c.sourceType === 'REMOTE' || c.sourceType === 'UMPT');
+        cables.forEach(function(c) {
+            var opt = document.createElement('option'); opt.value = c.id;
+            opt.text = '[' + c.id.replace('cabo_','') + '] ' + (c.siteOrigin || c.sourceType) + ' -> ' + (c.connectedTo || 'Slot 0 Port 1');
+            sel.appendChild(opt);
+        });
+        // seleciona o id pedido
+        if (id && sel.querySelector('option[value="' + id + '"]')) sel.value = id;
+        if (!sel.value && sel.options.length>0) sel.selectedIndex = 0;
+        trocarCaboPainel(sel.value);
+        panel.classList.add('open');
+    } catch (err) { console.error('abrirPainelConfig:', err); }
+}
+
+function trocarCaboPainel(id) {
+    try {
+        if(!id) return;
+        var cable = cableManager.getAllCables().find(c => c.id === id);
+        if(!cable) return;
+        var infoEl = document.getElementById('panelInfoSourceType'); if(infoEl) infoEl.innerText = 'TIPO: ' + (cable.sourceType || 'UNKNOWN') + (cable.siteOrigin ? ' • ' + cable.siteOrigin : '');
+        // Preencher inputs
+        var cfg = cable.config || {};
+        var sEl = document.getElementById('panelCfgSetor'); if(sEl) sEl.value = cfg.sector || '';
+        var lteEl = document.getElementById('panelCfgLteCount'); if(lteEl) lteEl.value = (typeof cfg.lteCount !== 'undefined' ? String(cfg.lteCount) : (cfg.lte || 0));
+        var nrEl = document.getElementById('panelCfgNrBw'); if(nrEl) nrEl.value = (cfg.nrBw || 0);
+        var rEl = document.getElementById('panelCfgRadio'); if(rEl) rEl.value = (cfg.radio || (rEl.options && rEl.options[0] ? rEl.options[0].value : ''));
+    } catch (err) { console.error('trocarCaboPainel:', err); }
+}
+
+function salvarConfigPainel() {
+    try {
+        var sel = document.getElementById('panelCableSelector');
+        var id = sel.value;
+        if(!id) return showNotification('Nenhum cabo selecionado.', 'warning');
+        var cable = cableManager.getAllCables().find(c => c.id === id);
+        if(!cable) return showNotification('Cabo não encontrado.', 'error');
+
+        var sectorEl = document.getElementById('panelCfgSetor'); var sector = sectorEl ? sectorEl.value : '';
+        if(!sector) return showNotification('Setor é obrigatório.', 'error');
+
+        var lteCountEl = document.getElementById('panelCfgLteCount'); var lteCount = parseInt((lteCountEl ? lteCountEl.value : '0') || '0');
+        var nrBwEl = document.getElementById('panelCfgNrBw'); var nrBw = parseInt((nrBwEl ? nrBwEl.value : '0') || '0');
+        var radioEl = document.getElementById('panelCfgRadio'); var radio = radioEl ? radioEl.value : null;
+
+        cable.config = cable.config || {};
+        cable.config.sector = sector;
+        cable.config.lteCount = lteCount;
+        cable.config.nrBw = nrBw;
+        cable.config.radio = radio;
+
+        // Atualiza visual e recalcula capacidade
+        cableManager.render();
+        if (typeof validarCapacidadeBBU === 'function') validarCapacidadeBBU();
+        if (typeof atualizarPowerBudget === 'function') atualizarPowerBudget();
+
+        showNotification('Configuração salva.', 'success');
+    } catch (err) { console.error('salvarConfigPainel:', err); showNotification('Erro ao salvar configuração.', 'error'); }
+}
+
+function deletarCaboPeloPainel() {
+    try {
+        var sel = document.getElementById('panelCableSelector');
+        var id = sel.value;
+        if(!id) return showNotification('Nenhum cabo selecionado.', 'warning');
+        var idx = cableManager.cables.findIndex(c => c.id === id);
+        if(idx === -1) return showNotification('Cabo não encontrado.', 'error');
+
+        cableManager.cables.splice(idx, 1);
+        cableManager.render();
+        showNotification('Cabo removido.', 'success');
+
+        // Atualiza lista e seleciona próximo
+        var selEl = document.getElementById('panelCableSelector');
+        var next = selEl.options[selEl.selectedIndex] && selEl.options[selEl.selectedIndex+1] ? selEl.options[selEl.selectedIndex+1].value : (selEl.options[0] ? selEl.options[0].value : '');
+        abrirPainelGeral();
+        if(next) {
+            selEl.value = next; trocarCaboPainel(next);
+        } else {
+            document.getElementById('sideConfigPanel').classList.remove('open');
+        }
+    } catch (err) { console.error('deletarCaboPeloPainel:', err); showNotification('Erro ao deletar cabo.', 'error'); }
+}
+
+// Alias para compatibilidade com chamadas antigas
+function abrirConfigCabo(id) { abrirPainelConfig(id); }
+
+// Hook: troca no select do painel (attach immediately)
+var __panelSel = document.getElementById('panelCableSelector');
+if(__panelSel) __panelSel.addEventListener('change', function() { trocarCaboPainel(this.value); });

@@ -209,10 +209,13 @@
                 <button class="header-btn btn-deploy" onclick="runDeploySequence()">
                     <span class="material-icons" style="font-size:16px">rocket_launch</span> DEPLOY
                 </button>
-            </div>
-            <button class="header-btn" onclick="toggleMindMap()" style="background:#2c3e50; margin-left: 10px; border: 1px solid #34495e;" title="Ver Arquitetura BBU">
-              <span class="material-icons" style="color:#00ffff;">account_tree</span> ARQUITETURA
-            </button>
+                        </div>
+                        <button id="btnOpenCablePanel" class="header-btn" onclick="abrirPainelGeral()" style="background:#151515; border:1px solid #333; margin-left:8px;" title="Config Cabos">
+                                <span class="material-icons" style="font-size:16px; color:#f37021;">settings</span> Config Cabos
+                        </button>
+                        <button class="header-btn" onclick="toggleMindMap()" style="background:#2c3e50; margin-left: 10px; border: 1px solid #34495e;" title="Ver Arquitetura BBU">
+                            <span class="material-icons" style="color:#00ffff;">account_tree</span> ARQUITETURA
+                        </button>
         </div>
         
         <button id="btnNewSite" class="fab-add-site" onclick="openAddSiteModal()" title="Adicionar Novo Site">
@@ -773,6 +776,79 @@
 
             <div id="mindMapContainer" style="flex:1; overflow:auto; padding:40px; background:#050505; position:relative;">
             </div>
+        </div>
+    </div>
+
+    <!-- Painel Lateral de Configuração RF (Off-Canvas) -->
+    <div id="sideConfigPanel" style="position:fixed; top:0; right:-380px; width:360px; height:100%; background:#151515; border-left:4px solid #f37021; z-index:35000; transition:right 0.34s ease; box-shadow: -20px 0 60px rgba(243,112,33,0.04); font-family: 'Segoe UI', sans-serif;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid rgba(255,255,255,0.03);">
+            <div style="display:flex; align-items:center; gap:10px; color:#fff; font-weight:800; letter-spacing:1px;">
+                <span style="color:#f37021; font-size:18px;">●</span>
+                <span style="font-size:13px;">CONFIGURAÇÃO RF</span>
+            </div>
+            <button id="sideCloseBtn" onclick="document.getElementById('sideConfigPanel').classList.remove('open')" style="background:transparent; border:none; color:#fff; font-size:18px; cursor:pointer;">✕</button>
+        </div>
+
+        <div style="padding:14px 18px; color:#ddd; height:calc(100% - 120px); overflow:auto;">
+            <div style="margin-bottom:12px;">
+                <label style="font-size:11px; color:#888; display:block; margin-bottom:6px;">Cabos RF Ativos</label>
+                <select id="panelCableSelector" style="width:100%; padding:10px; background:#0f0f10; color:#fff; border:1px solid #333; border-radius:6px;">
+                    <option value="">-- Nenhum --</option>
+                </select>
+            </div>
+
+                <div id="panelConfigBody">
+                <h4 style="color:#f37021; margin:0 0 10px 0;"><span class="material-icons" style="vertical-align:middle; font-size:18px; color:#f37021;">settings</span> Configurar Cabo</h4>
+                <div id="panelInfoSourceType" style="font-size:12px; color:#f37021; font-weight:bold; margin-bottom:10px;">TIPO: ...</div>
+
+                <div id="configODUOptions">
+                    <div class="form-group">
+                        <label style="font-size:12px; color:#ccc;">Setor (Define Cor)</label>
+                        <select id="panelCfgSetor" style="width:100%; padding:10px; background:#0f0f10; color:#fff; border:1px solid #333; border-radius:6px;">
+                            <option value="">Selecione...</option>
+                            <option value="A">Setor A (Red)</option>
+                            <option value="B">Setor B (Green)</option>
+                            <option value="C">Setor C (Blue)</option>
+                        </select>
+                    </div>
+
+                    <div style="border-top:1px solid #222; margin-top:10px; padding-top:10px;">
+                        <label style="color:#2ecc71; font-size:10px; font-weight:bold;">RECURSOS DE RÁDIO (CARRIER)</label>
+                        <div class="form-group" style="margin-top:8px;">
+                            <label style="font-size:12px; color:#ccc;">Portadoras LTE (20MHz)</label>
+                            <select id="panelCfgLteCount" style="width:100%; padding:10px; background:#0f0f10; color:#fff; border:1px solid #333; border-radius:6px; margin-top:6px;">
+                                <option value="0">Nenhum</option>
+                                <option value="1">1x 20MHz</option>
+                                <option value="2">2x 20MHz</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-top:8px;">
+                            <label style="font-size:12px; color:#ccc;">Portadora NR (5G)</label>
+                            <select id="panelCfgNrBw" style="width:100%; padding:10px; background:#0f0f10; color:#fff; border:1px solid #333; border-radius:6px; margin-top:6px;">
+                                <option value="0">Nenhum</option>
+                                <option value="30">1x 30MHz</option>
+                                <option value="40">1x 40MHz</option>
+                                <option value="50">1x 50MHz</option>
+                                <option value="80">1x 80MHz</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top:12px;">
+                        <label style="font-size:12px; color:#ccc;">Modelo Rádio</label>
+                        <select id="panelCfgRadio" style="width:100%; padding:10px; background:#0f0f10; color:#fff; border:1px solid #333; border-radius:6px; margin-top:6px;">
+                            <option value="64TR Huawei">64TR Huawei (AAU)</option>
+                            <option value="8TR Huawei">8TR Huawei (RRU)</option>
+                            <option value="4TR Huawei">4TR Huawei (RRU)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="position:absolute; bottom:0; left:0; width:100%; padding:12px 18px; border-top:1px solid rgba(255,255,255,0.03); background:linear-gradient(180deg, rgba(0,0,0,0.0), rgba(0,0,0,0.2)); display:flex; gap:10px; box-sizing:border-box;">
+            <button id="btnSavePanel" onclick="salvarConfigPainel()" style="flex:1; padding:10px; background:#2ecc71; color:#000; border:none; border-radius:6px; font-weight:800;">Salvar</button>
+            <button id="btnDeletePanel" onclick="deletarCaboPeloPainel()" style="padding:10px; background:#c0392b; color:#fff; border:none; border-radius:6px;">Deletar Cabo</button>
         </div>
     </div>
 

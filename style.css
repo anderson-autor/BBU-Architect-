@@ -144,6 +144,12 @@ body {
 }
 @keyframes pulseOverload { from { background-color: #220000; } to { background-color: #440000; } }
 
+.slot-incompatible-radio {
+    border: 2px dashed #f37021 !important; box-shadow: 0 0 20px rgba(243, 112, 33, 0.7) !important;
+    animation: pulseIncompatible 0.6s infinite alternate;
+}
+@keyframes pulseIncompatible { from { background-color: #2a1500; } to { background-color: #4a2200; } }
+
 .fan-slot { 
     background: repeating-linear-gradient(0deg, #111, #111 2px, #1a1a1a 2px, #1a1a1a 4px);
     display: flex; align-items: center; justify-content: center; 
@@ -439,6 +445,21 @@ body {
 #btnSalvarCabo { flex: 1; padding: 10px; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 6px; }
 .btn-icon-only { width: 45px; padding: 10px; font-size: 14px; background: #c0392b; border-color: #c0392b; display: flex; align-items: center; justify-content: center; }
 .btn-icon-only:hover { background: #e74c3c; }
+
+/* Painel Lateral Off-Canvas - Configuração RF (Dark/Neon) */
+#sideConfigPanel { right: -380px; }
+#sideConfigPanel.open { right: 0 !important; }
+#sideConfigPanel h4 { color: #f37021; margin-top: 0; }
+#sideConfigPanel label { color: #bfc7d1; font-size: 12px; }
+#sideConfigPanel .form-group { margin-bottom: 10px; }
+#sideConfigPanel select { background: transparent; border: 1px solid #333; color: #fff; }
+#sideConfigPanel .material-icons { vertical-align: middle; }
+#btnOpenCablePanel { border-color: rgba(243,112,33,0.08); }
+#btnOpenCablePanel:hover { box-shadow: 0 0 14px rgba(243,112,33,0.12); }
+
+/* small tweaks for scrollbar in panel */
+#sideConfigPanel::-webkit-scrollbar { width: 10px; }
+#sideConfigPanel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.04); border-radius: 6px; border: 1px solid rgba(0,0,0,0.4); }
 
 /* USB Modal */
 #usbInstallModal { 
