@@ -856,7 +856,6 @@ window.onload = function() {
     makeDraggable(document.getElementById('partsBox'));
     
     setupListeners();
-    createConfirmationModalUI();
     initInventory();
     
     if(typeof atualizarContadoresGeral === 'function') atualizarContadoresGeral();
@@ -3687,13 +3686,21 @@ function createConfirmationModalUI() {
         <div class="custom-modal-box" style="border-color: #f1c40f;">
             <h3 style="color:#f1c40f; margin-bottom:15px; text-transform:uppercase;">Confirmação</h3>
             <p id="lblConfirmMsg" style="color:#ddd; font-size:13px; margin-bottom:20px;">...</p>
-            <div class="modal-buttons"><button class="btn-cancel" onclick="closeConfirmModal()">CANCELAR</button><button class="btn-confirm" onclick="executeConfirmAction()">CONFIRMAR</button></div>
+            <div class="modal-buttons">
+                <button id="btnCancelConfirm" class="btn-cancel" style="pointer-events: auto; cursor: pointer;">CANCELAR</button>
+                <button id="btnExecuteConfirm" class="btn-confirm" style="pointer-events: auto; cursor: pointer;">CONFIRMAR</button>
+            </div>
         </div>
     </div>`;
     document.body.insertAdjacentHTML('beforeend', html);
+    
+    // Adicionar event listeners aos botões
+    document.getElementById('btnCancelConfirm').addEventListener('click', closeConfirmModal);
+    document.getElementById('btnExecuteConfirm').addEventListener('click', executeConfirmAction);
 }
 
 function showCustomConfirm(msg, callback) { 
+    createConfirmationModalUI();
     document.getElementById('lblConfirmMsg').innerText = msg; 
     pendingConfirmAction = callback; 
     document.getElementById('customConfirmModal').style.display = 'flex';
