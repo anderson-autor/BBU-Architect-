@@ -1895,6 +1895,8 @@ function burnSlot(slotId) {
         cableManager.cables = cableManager.cables.filter(c => c.id !== cable.id);
         cableManager.render();
     } 
+    // Marcar falha no slot para aparecer no console
+    try { activeFaults['slot_' + slotId] = 'BURN_OUT'; } catch(e) {}
     verificarEstadoSimulador(); 
     atualizarPowerBudget(); 
     manageSystemHealth();
@@ -2388,11 +2390,23 @@ function validarCapacidadeBBU() {
         if (groupUseNR > groupCapNR) issues.push(`Falta capacidade em NR: ${groupUseNR} > ${groupCapNR}`);
 
         if (issues.length > 0) {
+            // Marca visual e adiciona alarme para cada slot ativo do grupo
             activeElements.forEach(el => el.classList.add('slot-overload'));
+            activeSlots.forEach(function(slotId) {
+                var fKey = 'slot_' + slotId;
+                // marca como OVERHEAT para integrar com manageSystemHealth
+                activeFaults[fKey] = 'OVERHEAT';
+            });
             if (typeof courseState !== 'undefined' && !courseState.active) {
                 var context = (activeElements.length > 1) ? "GRUPO (Jumper)" : activeElements[0].querySelector('.installed-board-label').innerText;
                 showNotification(`ALERTA ${context}: ${issues[0]}`, "error");
             }
+        } else {
+            // Sem issues: limpar alarmes do tipo OVERHEAT para esses slots
+            activeSlots.forEach(function(slotId) {
+                var fKey = 'slot_' + slotId;
+                if (activeFaults[fKey] === 'OVERHEAT') delete activeFaults[fKey];
+            });
         }
     });
 }
@@ -2408,13 +2422,37 @@ function atualizarPowerBudget() {
                 var label = labelEl.innerText;
                 var specs = getUpeuSpecs(label);
                 var cable = cableManager.cables.find(c => c.connectedTo === "Slot " + sid + " Port PWR");
-                if (cable && dcduSwitches[sid]) {
+                if (cable && dcduSwitches[sid] && cable.polarityStatus === 'CORRECT') {
+                    // armazena capacidades ativas para possíveis regras de redundância
+                    if (!slot._activeUpeuList) slot._activeUpeuList = [];
+                    slot._activeUpeuList.push(specs.capacity);
                     currentCapacity += specs.capacity;
                 }
             }
         }
     });
-    
+    // Aplicar regra de redundância solicitada:
+    // - 2x1100 => reduzir 200
+    // - 2x650  => reduzir 100
+    // - 2x360  => reduzir 50
+    // se ambos os módulos forem iguais e ambos ativos
+    try {
+        var activeUpeus = [];
+        [18,19].forEach(function(sid){
+            var slot = document.getElementById('bbuSlot' + sid);
+            if (slot && slot._activeUpeuList && slot._activeUpeuList.length>0) {
+                activeUpeus.push(slot._activeUpeuList[0]);
+            }
+        });
+        if (activeUpeus.length === 2) {
+            if (activeUpeus[0] === activeUpeus[1]) {
+                if (activeUpeus[0] === 1100) currentCapacity -= 200;
+                else if (activeUpeus[0] === 650) currentCapacity -= 100;
+                else if (activeUpeus[0] === 360) currentCapacity -= 50;
+            }
+        }
+    } catch(e) { console.warn('Erro ao aplicar regra de redundância UPEU', e); }
+
     var currentLoad = POWER_SPECS.FAN; 
     for(var i=0; i<=7; i++) {
         var slot = document.getElementById('bbuSlot'+i);
