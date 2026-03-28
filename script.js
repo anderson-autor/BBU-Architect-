@@ -2249,15 +2249,6 @@ function validarCompatibilidadeRadios() {
             }
         });
 
-        // --- VALIDAÇÃO 4: G3A em TN (Bloqueia 64TR + 4TR juntos; 8TR+4TR permitido) ---
-        boardInfo.forEach(function(board) {
-            if (board.model.includes("UBBPg3A") && board.mode === "TN") {
-                if (radioTypesInGroup["64TR"] > 0 && radioTypesInGroup["4TR"] > 0) {
-                    issues.push(`G3A (TN) não aceita 64TR + 4TR juntos. Encontrado: ${radioTypesInGroup["64TR"]}×64TR + ${radioTypesInGroup["4TR"]}×4TR`);
-                }
-            }
-        });
-
         // Se houver problemas, mostrar e marcar slots
         if (issues.length > 0) {
             activeElements.forEach(el => el.classList.add('slot-incompatible-radio'));
