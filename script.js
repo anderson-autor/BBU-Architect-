@@ -958,16 +958,27 @@ function isInstalledSlot(slot) {
 function showNotification(msg, type) { 
     if(!type) type='warning'; 
     var container = document.getElementById('toast-container');
-    
+
     var iconName = type === 'success' ? 'check_circle' : (type === 'error' ? 'error' : 'warning'); 
     var toast = document.createElement('div');
     toast.className = 'toast-card toast-' + type;
     toast.innerHTML = '<span class="material-icons">' + iconName + '</span><div>' + msg + '</div>'; 
-    
-    container.appendChild(toast);
 
-    while (container.children.length > 1) {
-        container.removeChild(container.firstChild);
+    var foundError = Array.from(container.children).some(c => c.classList.contains('toast-error'));
+
+    if (type === 'error') {
+        // Priorizar erro: esvazia outras notificações antes de exibir.
+        while (container.firstChild) container.removeChild(container.firstChild);
+        container.appendChild(toast);
+    } else {
+        // Se já existe erro em exibição, mantém ele e ignora nova notificação não-error.
+        if (foundError) {
+            return;
+        }
+        container.appendChild(toast);
+        while (container.children.length > 1) {
+            container.removeChild(container.firstChild);
+        }
     }
 
     setTimeout(function() { 
@@ -2252,10 +2263,9 @@ function validarCompatibilidadeRadios() {
         // Se houver problemas, mostrar e marcar slots
         if (issues.length > 0) {
             activeElements.forEach(el => el.classList.add('slot-incompatible-radio'));
-            if (typeof courseState !== 'undefined' && !courseState.active) {
-                var context = (activeElements.length > 1) ? "GRUPO (Jumper)" : activeElements[0].querySelector('.installed-board-label').innerText;
-                showNotification(`INCOMPATIBILIDADE ${context}: ${issues[0]}`, "error");
-            }
+            var context = (activeElements.length > 1) ? "GRUPO (Jumper)" : activeElements[0].querySelector('.installed-board-label').innerText;
+            var issueMsg = `INCOMPATIBILIDADE ${context}: ${issues.join(' | ')}`;
+            showNotification(issueMsg, "error");
             return;
         }
     });
@@ -2309,10 +2319,15 @@ function validarCapacidadeBBU() {
             
             var lteCount = parseInt(c.config.lteCount) || 0;
             var nrBw = parseInt(c.config.nrBw) || 0;
-            
-            // Soma GLOBAL: todas as portadoras LTE e NR, independente de 64TR, 8TR ou 4TR
-            if (lteCount > 0) slotDemand[slotId].total_lte += lteCount;
-            if (nrBw > 0)     slotDemand[slotId].total_nr += 1;
+            var radioName = (c.config.radio || "").trim();
+            var is4TR = radioName === "4TR Huawei" || radioName.startsWith("4TR ") || radioName === "4TR";
+
+            // 4TR em modo split dobra as portadoras LTE e NR. Outros radios usam contagem normal.
+            var effectiveLte = lteCount * (is4TR ? 2 : 1);
+            var effectiveNr = (nrBw > 0) ? (is4TR ? 2 : 1) : 0;
+
+            if (effectiveLte > 0) slotDemand[slotId].total_lte += effectiveLte;
+            if (effectiveNr > 0) slotDemand[slotId].total_nr += effectiveNr;
         }
     });
 
@@ -2388,10 +2403,9 @@ function validarCapacidadeBBU() {
                 // marca como OVERHEAT para integrar com manageSystemHealth
                 activeFaults[fKey] = 'OVERHEAT';
             });
-            if (typeof courseState !== 'undefined' && !courseState.active) {
-                var context = (activeElements.length > 1) ? "GRUPO (Jumper)" : activeElements[0].querySelector('.installed-board-label').innerText;
-                showNotification(`ALERTA ${context}: ${issues[0]}`, "error");
-            }
+            var context = (activeElements.length > 1) ? "GRUPO (Jumper)" : activeElements[0].querySelector('.installed-board-label').innerText;
+            var issueMsg = `ALERTA ${context}: ${issues.join(' | ')}`;
+            showNotification(issueMsg, "error");
         } else {
             // Sem issues: limpar alarmes do tipo OVERHEAT para esses slots
             activeSlots.forEach(function(slotId) {
