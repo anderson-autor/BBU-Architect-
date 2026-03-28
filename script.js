@@ -966,7 +966,7 @@ function showNotification(msg, type) {
     
     container.appendChild(toast);
 
-    while (container.children.length > 3) {
+    while (container.children.length > 1) {
         container.removeChild(container.firstChild);
     }
 
