@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -131,6 +132,110 @@
                 <button class="btn-cancel" onclick="closeAddSiteModal()">Cancelar</button>
                 <button class="btn-confirm" onclick="confirmAddSite()">CRIAR</button>
             </div>
+
+            <!-- Dynamic tech-panel formulas: spawn floating formulas in the background -->
+            <script>
+            (function(){
+                const formulas = [
+                    { title: 'Channel Capacity (Shannon)', code: "C <span class='math-symbol'>=</span> B <span class='math-symbol'>&times;</span> log<sub>2</sub>(1 <span class='math-symbol'>+</span> S/N)" },
+                    { title: 'CPRI Line Rate', code: "R<sub>cpri</sub> = M &times; f<sub>s</sub> &times; N &times; 2 &times; C<sub>w</sub>" },
+                    { title: 'Resource Block Calc', code: "N<sub>RB</sub> = (BW &times; 10<sup>6</sup> - 2(BW<sub>g</sub>)) / (&Delta;f &times; 12)" },
+                    { title: 'Error Vector Magnitude (EVM)', code: "EVM = &radic;[ &Sigma;|S<sub>id</sub> - S<sub>meas</sub>|<sup>2</sup> / &Sigma;|S<sub>id</sub>|<sup>2</sup> ]" },
+                    { title: 'Latency Budget', code: "T<sub>total</sub> = T<sub>bbu</sub> + T<sub>fh</sub> + T<sub>rru</sub>" },
+                    { title: 'DSP Allocation', code: "DSP_CORES = 0x00A20" },
+                    { title: 'Fronthaul', code: "PROTOCOL: eCPRI &nbsp; | &nbsp; VLAN: 401" }
+                ];
+
+                function spawnFormula(){
+                    try{
+                        const item = formulas[Math.floor(Math.random()*formulas.length)];
+                        const el = document.createElement('div');
+                        const colorClass = Math.random() > 0.5 ? 'neon-orange-text' : 'neon-yellow-text';
+                        el.className = `floating-formula ${colorClass}`;
+                        el.innerHTML = `<div class='formula-title'>${item.title}</div><div class='math-text'>${item.code}</div>`;
+                        el.style.pointerEvents = 'none';
+                        el.style.userSelect = 'none';
+
+                        // Prefer place formulas in the modal overlay (outside the modal box) so they
+                        // float around it in the dark background. Fallback to document.body.
+                        const overlay = document.getElementById('setupModalOverlay');
+                        const overlayContainer = (overlay && overlay.style.display !== 'none') ? overlay : document.body;
+
+                        // Create or reuse a full-overlay wrapper to hold formulas (one per overlay)
+                        let wrapper = overlayContainer.querySelector('.tech-formula-wrapper');
+                        if (!wrapper) {
+                            wrapper = document.createElement('div');
+                            wrapper.className = 'tech-formula-wrapper';
+                            wrapper.style.position = 'absolute';
+                            wrapper.style.inset = '0';
+                            wrapper.style.pointerEvents = 'none';
+                            wrapper.style.overflow = 'hidden';
+                            wrapper.style.zIndex = '1';
+                            overlayContainer.insertBefore(wrapper, overlayContainer.firstChild);
+
+                            // Ensure the modal box itself renders above the wrapper
+                            const modalBox = overlayContainer.querySelector('.setup-box-modern');
+                            if (modalBox) {
+                                modalBox.style.position = 'relative';
+                                modalBox.style.zIndex = '2';
+                            }
+                        }
+
+                        // Compute safe horizontal ranges so elements never overlap the modal box
+                        const overlayRect = overlayContainer.getBoundingClientRect();
+                        const modalBox = overlayContainer.querySelector('.setup-box-modern');
+                        const modalRect = modalBox ? modalBox.getBoundingClientRect() : null;
+
+                        const isLeft = Math.random() > 0.5;
+                        const width = overlayRect.width;
+                        const height = overlayRect.height;
+
+                        const leftAreaMin = 0.05 * width;
+                        const leftAreaMaxDefault = 0.30 * width;
+                        const rightAreaMinDefault = 0.70 * width;
+                        const rightAreaMax = 0.95 * width;
+
+                        let x;
+                        if (isLeft) {
+                            let maxX = leftAreaMaxDefault;
+                            if (modalRect) {
+                                const modalLeftRel = modalRect.left - overlayRect.left;
+                                maxX = Math.min(maxX, modalLeftRel - 20);
+                            }
+                            const minX = leftAreaMin;
+                            const finalMax = Math.max(maxX, minX + 40);
+                            x = Math.round(minX + Math.random() * (finalMax - minX));
+                        } else {
+                            let minX = rightAreaMinDefault;
+                            if (modalRect) {
+                                const modalRightRel = modalRect.right - overlayRect.left;
+                                minX = Math.max(minX, modalRightRel + 20);
+                            }
+                            const finalMax = Math.max(minX + 40, rightAreaMax);
+                            const boundedMax = Math.min(rightAreaMax, overlayRect.width - 20);
+                            x = Math.round(minX + Math.random() * (boundedMax - minX));
+                        }
+
+                        const y = Math.round((0.10 + Math.random() * 0.80) * height);
+
+                        el.style.left = x + 'px';
+                        el.style.top = y + 'px';
+
+                        const duration = 8 + Math.random() * 6; // 8-14s
+                        el.style.animation = `floatInOut ${duration}s ease-in-out forwards`;
+
+                        wrapper.appendChild(el);
+                        // Remove after animation to prevent memory leaks
+                        setTimeout(() => { if(el && el.parentNode) el.parentNode.removeChild(el); }, duration * 1000 + 50);
+                    } catch (e) { console.warn('spawnFormula error', e); }
+                }
+
+                // initial burst
+                for(let i=0;i<5;i++){ setTimeout(spawnFormula, Math.random()*4000); }
+                // periodic spawn every 2.5s
+                setInterval(spawnFormula, 2500);
+            })();
+            </script>
         </div>
     </div>
 

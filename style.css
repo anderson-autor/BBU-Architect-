@@ -386,6 +386,12 @@ body {
 .setup-header { text-align: center; margin-bottom: 10px; }
 .setup-header h2 { color: #fff; font-size: 20px; letter-spacing: 1px; margin: 10px 0 5px 0; font-weight: 600; }
 .version-tag { color: #f37021; font-weight: 300; font-size: 14px; }
+
+/* Wrapper para fórmulas dentro do modal: mantém elementos do modal acima do fundo animado */
+.tech-formula-wrapper { position: absolute; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
+/* Ensure overlay wrapper is lower than modal content */
+#setupModalOverlay .tech-formula-wrapper { z-index: 1; }
+#setupModalOverlay .setup-box-modern { position: relative; z-index: 2; }
 .setup-header p { color: #6c757d; font-size: 12px; margin: 0; text-transform: uppercase; letter-spacing: 2px; }
 
 .setup-icon-pulse {
@@ -421,6 +427,50 @@ body {
 
 /* Autor / Crédtios exibidos no modal de inicialização */
 .creator-credit { font-size: 11px; color: #bfbfbf; text-align: center; margin: 8px 0 10px 0; }
+
+/* Painel tecnológico: fórmulas flutuantes (neon) */
+.floating-formula {
+    position: absolute;
+    pointer-events: none;
+    user-select: none;
+    font-family: 'JetBrains Mono', monospace;
+    z-index: 1;
+    white-space: nowrap;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    opacity: 0;
+}
+
+.floating-formula .formula-title {
+    font-size: 10px;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+
+.floating-formula .math-text { font-size: 13px; color: rgba(255,255,255,0.85); }
+
+.neon-orange-text {
+    color: #f97316;
+    text-shadow: 0 0 2px rgba(249,115,22,0.2), 0 0 8px rgba(249,115,22,0.4), 0 0 14px rgba(249,115,22,0.12);
+}
+
+.neon-yellow-text {
+    color: #eab308;
+    text-shadow: 0 0 2px rgba(234,179,8,0.2), 0 0 8px rgba(234,179,8,0.4), 0 0 14px rgba(234,179,8,0.12);
+}
+
+@keyframes floatInOut {
+    0% { opacity: 0; transform: translate(-50%, -50%) translateY(12px) scale(0.98); }
+    20% { opacity: 0.18; transform: translate(-50%, -50%) translateY(6px) scale(1); }
+    50% { opacity: 0.35; transform: translate(-50%, -50%) translateY(0px) scale(1.02); }
+    80% { opacity: 0.18; transform: translate(-50%, -50%) translateY(-12px) scale(1.04); }
+    100% { opacity: 0; transform: translate(-50%, -50%) translateY(-28px) scale(1.06); }
+}
 
 /* Cable Config Modal */
 #cableConfigModal { 
